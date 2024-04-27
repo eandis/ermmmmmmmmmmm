@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comments</title>
+    <!-- Add any necessary CSS styles -->
+</head>
+<body>
+    <h2>Comments</h2>
+    <!-- Display existing comments here -->
+    <div id="comments"></div>
+    <!-- Form for users to submit new comments -->
+    <form id="commentForm">
+        <textarea id="commentText" name="comment" placeholder="Write your comment here" required></textarea><br>
+        <input type="submit" value="Submit Comment">
+    </form>
+    <div class="message" id="commentMessage"></div>
+    <!-- Add jQuery library (you can download it or use a CDN) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        $(document).ready(function(){
+            // Load comments when the page is loaded
+            loadComments();
+
+            // Handle form submission
+            $('#commentForm').submit(function(event){
+                event.preventDefault();
+                var commentText = $('#commentText').val();
+                // Sanitize comment text to prevent XSS
+                var sanitizedCommentText = $('<div>').text(commentText).html(); // Convert special characters to HTML entities
+
+                $.ajax({
+                    type: 'POST',
+                    url: '/submit_comment',
+                    data: { comment: sanitizedCommentText },
+                    success: function(response){
+                        $('#commentMessage').text(response.message);
+                        if(response.success){
+                            // Clear the form and reload comments if successful
+                            $('#commentText').val('');
+                            loadComments();
+                        }
+                    }
+                });
+            });
+
+            // Function to load comments from the server
+            function loadComments(){
+                $.ajax({
+                    type: 'GET',
+                    url: '/get_comments',
+                    success: function(comments){
+                        // Display comments in the 'comments' div
+                        var commentsHtml = '';
+                        comments.forEach(function(comment){
+                            commentsHtml += '<div>' + comment.text + '</div>';
+                        });
+                        $('#comments').html(commentsHtml);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
